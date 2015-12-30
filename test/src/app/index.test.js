@@ -45,7 +45,7 @@ describe('generator:app', () => {
     });
 
     it('uses reasonable defaults for the test eslintrc', () => {
-      assert.jsonFileContent('tests/.eslintrc', {
+      assert.jsonFileContent('test/.eslintrc', {
         env: {es6: true, mocha: true},
         globals: testGlobals,
         rules: testRules,
@@ -62,7 +62,7 @@ describe('generator:app', () => {
         'rules',
       ];
 
-      ['.eslintrc', 'tests/.eslintrc'].forEach((file) => {
+      ['.eslintrc', 'test/.eslintrc'].forEach((file) => {
         let eslintConfig = JSON.parse(fs.readFileSync(file).toString());
         let lastIndex = -1;
 
@@ -109,7 +109,7 @@ describe('generator:app', () => {
       });
 
       it('sets the correct test env', () => {
-        assert.jsonFileContent('tests/.eslintrc', {
+        assert.jsonFileContent('test/.eslintrc', {
           env: {...expectedEnv, [testFramework]: true},
         });
       });
@@ -130,7 +130,7 @@ describe('generator:app', () => {
       });
 
       it('sets the correct test env', () => {
-        assert.jsonFileContent('tests/.eslintrc', {
+        assert.jsonFileContent('test/.eslintrc', {
           env: {...expectedEnv, [testFramework]: true},
         });
       });
@@ -243,7 +243,7 @@ describe('generator:app', () => {
     });
 
     it('does not write any test eslintrc file', () => {
-      assert.noFile('tests/.eslintrc');
+      assert.noFile('test/.eslintrc');
     });
   });
 
@@ -259,7 +259,7 @@ describe('generator:app', () => {
       });
 
       it('sets the correct test framework env', () => {
-        assert.jsonFileContent('tests/.eslintrc', {
+        assert.jsonFileContent('test/.eslintrc', {
           env: {[nonDefaultFramework]: true},
         });
       });
@@ -274,7 +274,7 @@ describe('generator:app', () => {
       });
 
       it('sets the correct test framework env', () => {
-        assert.jsonFileContent('tests/.eslintrc', {
+        assert.jsonFileContent('test/.eslintrc', {
           env: {[nonDefaultFramework]: true},
         });
       });

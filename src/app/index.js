@@ -106,7 +106,7 @@ module.exports = class ESLintGenerator extends Base {
       {
         name: 'testDir',
         message: 'What directory are your tests in?',
-        default: 'tests',
+        default: 'test',
         when({needsTests}) {
           return options.testDir == null && (needsTests || options.testFramework != null);
         },
