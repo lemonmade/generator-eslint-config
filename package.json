@@ -27,6 +27,7 @@
     "src",
     "generators"
   ],
+  "repository": "lemonmade/generator-eslint-config",
   "license": "MIT",
   "devDependencies": {
     "babel": "^6.3.26",

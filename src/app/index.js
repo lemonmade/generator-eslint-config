@@ -82,7 +82,7 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       {
         name: 'extends',
         message: 'The ESLint configuration to extend.',
-        default: 'shopify',
+        default: 'eslint:recommended',
         when: options.extends == null,
       },
 
@@ -110,7 +110,6 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       {
         name: 'plugins',
         message: 'The ESLint plugins to install (comma-separated).',
-        default: 'shopify',
         filter: commaSeparated,
         when: options.plugins == null,
       },
@@ -196,7 +195,10 @@ module.exports = class ESLintGenerator extends BaseGenerator {
 
     if (!_.isEmpty(props.extends)) {
       eslintConfig.extends = cleanESLintName(props.extends);
-      install.push(packageName(props.extends, {type: 'config'}));
+
+      if (!isBuiltInConfig(props.extends)) {
+        install.push(packageName(props.extends, {type: 'config'}));
+      }
     }
 
     if (!_.isEmpty(props.plugins)) {
@@ -249,13 +251,18 @@ function arrangeConfig(config) {
 }
 
 function commaSeparated(list) {
+  if (!list.trim().length) { return []; }
   return list.split(/\s*,\s*/g);
 }
 
 function cleanESLintName(name) {
-  return name.replace(/(eslint|config|plugin)\-/g, '');
+  return name.replace(/^(eslint\-)?(config|plugin)\-/, '');
 }
 
 function packageName(name, {type}) {
   return `eslint-${type}-${cleanESLintName(name).split(/[:\/]/)[0]}`;
+}
+
+function isBuiltInConfig(config) {
+  return /eslint:/.test(config);
 }

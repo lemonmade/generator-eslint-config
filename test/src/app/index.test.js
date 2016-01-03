@@ -2,6 +2,7 @@ import '../../helper';
 
 import fs from 'fs';
 import path from 'path';
+import assert from 'yeoman-assert';
 import helpers from 'yeoman-test';
 
 import {globals as testGlobals, rules as testRules} from '../../../src/app/test-overrides';
@@ -38,9 +39,9 @@ describe('generator:app', () => {
 
     it('uses reasonable defaults for the eslintrc', () => {
       assert.jsonFileContent('.eslintrc', {
-        extends: 'shopify',
+        extends: 'eslint:recommended',
         parser: 'babel-eslint',
-        plugins: ['shopify'],
+        plugins: [],
         env: {es6: true},
         rules: {},
       });
@@ -88,8 +89,6 @@ describe('generator:app', () => {
       expect(args[0]).to.include(
         'eslint',
         'babel-eslint',
-        'eslint-config-shopify',
-        'eslint-plugin-shopify'
       );
     });
 
@@ -152,6 +151,27 @@ describe('generator:app', () => {
 
   describe('--extends', () => {
     const extendConfig = 'shopify';
+
+    context('when an eslint config is provided', () => {
+      const eslintConfig = 'eslint:recommended';
+
+      beforeEach((done) => {
+        helpers
+          .run(generatorIndex)
+          .withOptions({extends: eslintConfig})
+          .on('ready', spyOnGenerator)
+          .on('end', done);
+      });
+
+      it('sets the eslintrc extends', () => {
+        assert.jsonFileContent('.eslintrc', {extends: eslintConfig});
+      });
+
+      it('does not install a config unnecessarily', () => {
+        let args = generator.npmInstall.lastCall.args;
+        expect(args[0]).not.to.include('eslint-config-eslint');
+      });
+    });
 
     context('when provided by options', () => {
       beforeEach((done) => {
