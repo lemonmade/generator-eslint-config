@@ -297,6 +297,11 @@ describe('generator:app', () => {
     it('does not write any test eslintrc file', () => {
       assert.noFile('test/.eslintrc');
     });
+
+    it('adds the common default test directories to the eslintignore', () => {
+      assert.fileContent('.eslintignore', 'test/');
+      assert.fileContent('.eslintignore', 'spec/');
+    });
   });
 
   describe('--testFramework', () => {

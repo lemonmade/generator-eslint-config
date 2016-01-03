@@ -198,9 +198,11 @@ module.exports = class ESLintGenerator extends BaseGenerator {
     fs.writeJSON(this.destinationPath('.eslintrc'), arrangeConfig(eslintConfig));
     this.npmInstall(install, {saveDev: true});
 
-    if (props.ignore.length) {
-      fs.write(this.destinationPath('.eslintignore'), props.ignore.join('\n'));
+    if (!props.needsTests) {
+      props.ignore.push('test/', 'spec/');
     }
+
+    fs.write(this.destinationPath('.eslintignore'), props.ignore.join('\n'));
 
     if (props.needsTests && props.testDir) {
       let testEnv = {...env};

@@ -4,5 +4,4 @@
 /test/
 /.eslint*
 /.gitignore
-/.npmignore
 /.travis.yml
