@@ -3,7 +3,9 @@ import '../../helper';
 import fs from 'fs';
 import path from 'path';
 import helpers from 'yeoman-test';
+
 import {globals as testGlobals, rules as testRules} from '../../../src/app/test-overrides';
+import ownPackage from '../../../package.json';
 
 describe('generator:app', () => {
   let generator;
@@ -52,6 +54,11 @@ describe('generator:app', () => {
       });
     });
 
+    it('uses reasonable defaults for the test eslintignore', () => {
+      assert.fileContent('.eslintignore', /coverage\//);
+      assert.fileContent('.eslintignore', /node_modules\//);
+    });
+
     it('sorts the eslintrc file', () => {
       const configOrder = [
         'extends',
@@ -84,6 +91,12 @@ describe('generator:app', () => {
         'eslint-config-shopify',
         'eslint-plugin-shopify'
       );
+    });
+
+    it('adds a linting script', () => {
+      assert.jsonFileContent('package.json', {
+        scripts: {lint: ownPackage.scripts.lint},
+      });
     });
   });
 
@@ -231,6 +244,45 @@ describe('generator:app', () => {
         expect(args[1]).to.deep.equal({saveDev: true});
         expect(args[0]).to.include(...plugins.map((plugin) => `eslint-plugin-${cleanName(plugin)}`));
       });
+    });
+  });
+
+  describe('--babel', () => {
+    beforeEach((done) => {
+      helpers
+        .run(generatorIndex)
+        .withPrompts({babel: false})
+        .on('ready', spyOnGenerator)
+        .on('end', done);
+    });
+
+    it('does not include the babel-eslint parser', () => {
+      expect(generator.npmInstall.lastCall.args[0]).not.to.include('babel-eslint');
+    });
+
+    it('uses reasonable defaults for the eslintrc', () => {
+      assert.jsonFileContent('.eslintrc', {env: {}});
+    });
+
+    it('uses reasonable defaults for the test eslintrc', () => {
+      assert.jsonFileContent('test/.eslintrc', {env: {mocha: true}});
+    });
+  });
+
+  describe('--ignore', () => {
+    const ignore = ['foo/', 'bar/', 'baz/'];
+
+    beforeEach((done) => {
+      helpers
+        .run(generatorIndex)
+        .withPrompts({ignore: ignore.join(', ')})
+        .on('end', done);
+    });
+
+    it('appends to the default exclusions', () => {
+      assert.fileContent('.eslintignore', /coverage\//);
+      assert.fileContent('.eslintignore', /node_modules\//);
+      ignore.forEach((ignoreItem) => assert.fileContent('.eslintignore', ignoreItem));
     });
   });
 

@@ -1,8 +1,12 @@
 import _ from 'lodash';
-import {Base} from 'yeoman-generator';
-import {globals as testGlobals, rules as testRules} from './test-overrides';
+import {Base as BaseGenerator} from 'yeoman-generator';
+import chalk from 'chalk';
+import yosay from 'yosay';
 
-module.exports = class ESLintGenerator extends Base {
+import {globals as testGlobals, rules as testRules} from './test-overrides';
+import ownPackage from '../../package.json';
+
+module.exports = class ESLintGenerator extends BaseGenerator {
   constructor(...args) {
     super(...args);
 
@@ -22,6 +26,12 @@ module.exports = class ESLintGenerator extends Base {
       type: String,
       required: false,
       desc: 'The ESLint plugins to install (comma-separated).',
+    });
+
+    this.option('babel', {
+      type: Boolean,
+      required: false,
+      desc: 'Whether to use the Babel linter and ES6 env.',
     });
 
     this.option('testDir', {
@@ -44,15 +54,21 @@ module.exports = class ESLintGenerator extends Base {
       extends: options.extends,
       env: options.envs ? commaSeparated(String(options.envs)) : [],
       plugins: options.plugins ? commaSeparated(String(options.plugins)) : [],
+      babel: options.babel,
       needsTests: options.testFramework != null || options.testDir != null,
       testFramework: options.testFramework,
       testDir: options.testDir,
+      ignore: ['node_modules/', 'coverage/'],
     };
   }
 
   prompting() {
     let done = this.async();
     let {options} = this;
+
+    if (options.skipWelcomeMessage) {
+      this.log(yosay(`Welcome to the ${chalk.red('eslint-config')} generator!`));
+    }
 
     let prompts = [
       {
@@ -63,16 +79,23 @@ module.exports = class ESLintGenerator extends Base {
       },
 
       {
+        name: 'babel',
+        message: 'Would you like to use the Babel parser?',
+        type: 'confirm',
+        default: true,
+        when: options.babel == null,
+      },
+
+      {
         name: 'env',
         message: 'The ESLint environment(s) for this project.',
         type: 'checkbox',
         choices: [
-          {name: 'es6', checked: true},
           {name: 'browser'},
           {name: 'node'},
           {name: 'jquery'},
         ],
-        default: ['es6'],
+        default: [],
         when: options.envs == null,
       },
 
@@ -85,8 +108,14 @@ module.exports = class ESLintGenerator extends Base {
       },
 
       {
+        name: 'ignore',
+        message: 'The files and directories to ignore (comma-seperated).',
+        filter: commaSeparated,
+      },
+
+      {
         name: 'needsTests',
-        message: 'Do you use a testing framework?',
+        message: 'Do you want to lint your tests?',
         type: 'confirm',
         default: true,
         when: options.testFramework == null && options.testDir == null,
@@ -113,8 +142,15 @@ module.exports = class ESLintGenerator extends Base {
       },
     ];
 
-    this.prompt(prompts, (props) => {
-      this.props = _.merge(this.props, props, (first, second) => {
+    this.prompt(prompts, (newProps) => {
+      this.props = _.merge(this.props, newProps, (first, second) => {
+        if (_.isArray(first)) {
+          // for tests - the helper does not run the filter on prompts.
+          if (second == null) { return first; }
+          if (typeof second === 'string') { second = commaSeparated(second); }
+          return [...first, ...second];
+        }
+
         if (_.isArray(first) && _.isArray(second)) {
           return [...first, ...second];
         }
@@ -125,13 +161,22 @@ module.exports = class ESLintGenerator extends Base {
   }
 
   writing() {
+    let pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
+    _.merge(pkg, {scripts: {lint: ownPackage.scripts.lint}});
+    this.fs.writeJSON(this.destinationPath('package.json'), pkg);
+
     let {fs, props} = this;
 
     let env = {};
-    let install = [];
+    let install = ['eslint'];
 
     if (!_.isEmpty(props.env)) {
       props.env.forEach((environment) => env[environment] = true);
+    }
+
+    if (props.babel) {
+      install.push('babel-eslint');
+      env.es6 = true;
     }
 
     let eslintConfig = {
@@ -140,25 +185,22 @@ module.exports = class ESLintGenerator extends Base {
       rules: {},
     };
 
-    install.push('eslint', 'babel-eslint');
-
     if (!_.isEmpty(props.extends)) {
       eslintConfig.extends = cleanESLintName(props.extends);
       install.push(packageName(props.extends, {type: 'config'}));
     }
 
-    if (typeof props.plugins === 'string') {
-      // for tests - the helper does not run the filter on prompts.
-      props.plugins = commaSeparated(props.plugins);
-    }
-
     if (!_.isEmpty(props.plugins)) {
       eslintConfig.plugins = props.plugins.map((plugin) => cleanESLintName(plugin));
-      install.push(...props.plugins.map((plugin) => packageName(plugin, {type: 'plugin'})), {saveDev: true});
+      install.push(...props.plugins.map((plugin) => packageName(plugin, {type: 'plugin'})));
     }
 
     fs.writeJSON(this.destinationPath('.eslintrc'), arrangeConfig(eslintConfig));
     this.npmInstall(install, {saveDev: true});
+
+    if (props.ignore.length) {
+      fs.write(this.destinationPath('.eslintignore'), props.ignore.join('\n'));
+    }
 
     if (props.needsTests && props.testDir) {
       let testEnv = {...env};
