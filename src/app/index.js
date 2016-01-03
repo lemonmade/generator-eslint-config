@@ -66,7 +66,7 @@ module.exports = class ESLintGenerator extends BaseGenerator {
     let done = this.async();
     let {options} = this;
 
-    if (options.skipWelcomeMessage) {
+    if (!options.skipWelcomeMessage) {
       this.log(yosay(`Welcome to the ${chalk.red('eslint-config')} generator!`));
     }
 
