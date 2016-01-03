@@ -1,7 +1,0 @@
-*.log
-/.*/
-/coverage/
-/test/
-/.eslint*
-/.gitignore
-/.travis.yml

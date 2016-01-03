@@ -4,9 +4,6 @@
   "description": "Generate an ESLint configuration.",
   "main": "generators/app/index.js",
   "jsnext:main": "src/app/index.js",
-  "directories": {
-    "test": "test"
-  },
   "scripts": {
     "clean": "rimraf generators coverage",
     "lint": "eslint . --max-warnings 0",
@@ -26,6 +23,10 @@
     "name": "Chris Sauve",
     "email": "chrismsauve@gmail.com"
   },
+  "files": [
+    "src",
+    "generators"
+  ],
   "license": "MIT",
   "devDependencies": {
     "babel": "^6.3.26",
