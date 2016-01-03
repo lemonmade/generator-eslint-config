@@ -1,6 +1,6 @@
 {
   "name": "generator-eslint-config",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Generate an ESLint configuration.",
   "main": "generators/app/index.js",
   "jsnext:main": "src/app/index.js",
