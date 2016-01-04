@@ -53,6 +53,12 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       required: false,
       desc: 'The initial set of ignored directories.',
     });
+
+    this.option('disableRules', {
+      type: Array,
+      required: false,
+      desc: 'Any rules you would like to forcibly disable.',
+    });
   }
 
   initializing() {
@@ -67,6 +73,7 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       testFramework: options.testFramework,
       testDir: options.testDir,
       ignore: options.ignore,
+      disableRules: options.disableRules,
     };
   }
 
@@ -119,6 +126,13 @@ module.exports = class ESLintGenerator extends BaseGenerator {
         message: 'The files and directories to ignore (comma-seperated).',
         filter: commaSeparated,
         when: options.ignore == null,
+      },
+
+      {
+        name: 'disableRules',
+        message: 'Any rules you would like to forcibly disable (comma-seperated).',
+        filter: commaSeparated,
+        when: options.disableRules == null,
       },
 
       {
@@ -206,6 +220,12 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       install.push(...props.plugins.map((plugin) => packageName(plugin, {type: 'plugin'})));
     }
 
+    if (!_.isEmpty(props.disableRules)) {
+      commaSeparated(props.disableRules).forEach((rule) => {
+        eslintConfig.rules[rule] = 0;
+      });
+    }
+
     this.fs.writeJSON(this.destinationPath('.eslintrc'), arrangeConfig(eslintConfig));
     this.npmInstall(install, {saveDev: true});
 
@@ -251,6 +271,7 @@ function arrangeConfig(config) {
 }
 
 function commaSeparated(list) {
+  if (list.constructor === Array) { return list; }
   if (!list.trim().length) { return []; }
   return list.split(/\s*,\s*/g);
 }

@@ -27,6 +27,14 @@
     "src",
     "generators"
   ],
+  "keywords": [
+    "yeoman",
+    "yeoman-generator",
+    "eslint",
+    "lint",
+    "es6",
+    "es2015"
+  ],
   "repository": "lemonmade/generator-eslint-config",
   "license": "MIT",
   "devDependencies": {

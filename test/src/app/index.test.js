@@ -306,6 +306,26 @@ describe('generator:app', () => {
     });
   });
 
+  describe('--disableRules', () => {
+    const disableRules = ['shopify/require-flow', 'no-var'];
+
+    beforeEach((done) => {
+      helpers
+        .run(generatorIndex)
+        .withPrompts({disableRules: disableRules.join(', ')})
+        .on('end', done);
+    });
+
+    it('turns off the specified rules', () => {
+      let expectedRules = {};
+      disableRules.forEach((rule) => {
+        expectedRules[rule] = 0;
+      });
+
+      assert.jsonFileContent('.eslintrc', {rules: expectedRules});
+    });
+  });
+
   describe('--needsTests', () => {
     beforeEach((done) => {
       helpers
