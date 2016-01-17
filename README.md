@@ -1,6 +1,6 @@
 # generator-eslint-config
 
-[![NPM version][npm-image]][npm-url] [![Dependency Status][daviddm-image]][daviddm-url] [![Build Status][travis-image]][travis-url] [![Coverage percentage][coveralls-image]][coveralls-url]
+[![NPM version][npm-image]][npm-url] [![Dependency Status][daviddm-image]][daviddm-url] [![Build Status][travis-image]][travis-url]
 
 > A Yeoman generator for creating a complete ESLint config.
 
@@ -41,7 +41,7 @@ The generator prompts will take you through setting up your config, including wh
 
 ## License
 
- © Chris Sauve
+MIT © Chris Sauve
 
 [npm-image]: https://badge.fury.io/js/generator-eslint-config.svg
 [npm-url]: https://npmjs.org/package/generator-eslint-config
@@ -51,6 +51,3 @@ The generator prompts will take you through setting up your config, including wh
 
 [travis-image]: https://travis-ci.org/lemonmade/generator-eslint-config.svg?branch=master
 [travis-url]: https://travis-ci.org/lemonmade/generator-eslint-config
-
-[coveralls-image]: https://coveralls.io/repos/lemonmade/generator-eslint-config/badge.svg
-[coveralls-url]: https://coveralls.io/r/lemonmade/generator-eslint-config
