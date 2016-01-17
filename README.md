@@ -13,7 +13,7 @@ npm install -g yo
 npm install -g generator-eslint-config
 ```
 
-Then generate your new project:
+Then generate your ESLint configuration:
 
 ```bash
 yo eslint-config
