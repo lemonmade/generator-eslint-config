@@ -196,16 +196,16 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       props.env.forEach((environment) => env[environment] = true);
     }
 
-    if (props.babel) {
-      install.push('babel-eslint');
-      env.es6 = true;
-    }
-
     let eslintConfig = {
-      parser: 'babel-eslint',
       env,
       rules: {},
     };
+
+    if (props.babel) {
+      install.push('babel-eslint');
+      eslintConfig.parser = 'babel-eslint';
+      env.es6 = true;
+    }
 
     if (!_.isEmpty(props.extends)) {
       eslintConfig.extends = cleanESLintName(props.extends);

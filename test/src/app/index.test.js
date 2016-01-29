@@ -281,7 +281,9 @@ describe('generator:app', () => {
     });
 
     it('uses reasonable defaults for the eslintrc', () => {
-      assert.jsonFileContent('.eslintrc', {env: {}});
+      let eslintConfig = JSON.parse(fs.readFileSync('.eslintrc').toString());
+      expect(eslintConfig.env).to.deep.equal({});
+      expect(eslintConfig.parser).to.be.undefined;
     });
 
     it('uses reasonable defaults for the test eslintrc', () => {
