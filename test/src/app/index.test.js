@@ -203,7 +203,7 @@ describe('generator:app', () => {
         let args = generator.npmInstall.lastCall.args;
 
         expect(args[1]).to.deep.equal({saveDev: true});
-        expect(args[0]).to.include('eslint', `eslint-config-${extendConfig}`);
+        expect(args[0]).to.include(`eslint-config-${extendConfig}`);
       });
     });
 
@@ -224,7 +224,72 @@ describe('generator:app', () => {
         let args = generator.npmInstall.lastCall.args;
 
         expect(args[1]).to.deep.equal({saveDev: true});
-        expect(args[0]).to.include('eslint', `eslint-config-${extendConfig}`);
+        expect(args[0]).to.include(`eslint-config-${extendConfig}`);
+      });
+    });
+
+    context('when a plugin config is used', () => {
+      context('when the shortened plugin name is used', () => {
+        beforeEach((done) => {
+          helpers
+            .run(generatorIndex)
+            .withPrompts({extends: `plugin:${extendConfig}/default`})
+            .on('ready', spyOnGenerator)
+            .on('end', done);
+        });
+
+        it('sets the eslintrc extends', () => {
+          assert.jsonFileContent('.eslintrc', {extends: `plugin:${extendConfig}/default`});
+        });
+
+        it('adds the extend config as a dependency', () => {
+          let args = generator.npmInstall.lastCall.args;
+
+          expect(args[1]).to.deep.equal({saveDev: true});
+          expect(args[0]).to.include(`eslint-plugin-${extendConfig}`);
+        });
+      });
+
+      context('when the full plugin name is used', () => {
+        beforeEach((done) => {
+          helpers
+            .run(generatorIndex)
+            .withPrompts({extends: `plugin:eslint-plugin-${extendConfig}/default`})
+            .on('ready', spyOnGenerator)
+            .on('end', done);
+        });
+
+        it('sets the eslintrc extends', () => {
+          assert.jsonFileContent('.eslintrc', {extends: `plugin:${extendConfig}/default`});
+        });
+
+        it('adds the extend config as a dependency', () => {
+          let args = generator.npmInstall.lastCall.args;
+
+          expect(args[1]).to.deep.equal({saveDev: true});
+          expect(args[0]).to.include(`eslint-plugin-${extendConfig}`);
+        });
+      });
+
+      context('when the full plugin name is used without the plugin: prefix', () => {
+        beforeEach((done) => {
+          helpers
+            .run(generatorIndex)
+            .withPrompts({extends: `eslint-plugin-${extendConfig}/default`})
+            .on('ready', spyOnGenerator)
+            .on('end', done);
+        });
+
+        it('sets the eslintrc extends', () => {
+          assert.jsonFileContent('.eslintrc', {extends: `plugin:${extendConfig}/default`});
+        });
+
+        it('adds the extend config as a dependency', () => {
+          let args = generator.npmInstall.lastCall.args;
+
+          expect(args[1]).to.deep.equal({saveDev: true});
+          expect(args[0]).to.include(`eslint-plugin-${extendConfig}`);
+        });
       });
     });
   });

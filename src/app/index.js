@@ -208,10 +208,14 @@ module.exports = class ESLintGenerator extends BaseGenerator {
     }
 
     if (!_.isEmpty(props.extends)) {
-      eslintConfig.extends = cleanESLintName(props.extends);
+      let isPluginConfig = extendsIsPlugin(props.extends);
+      let cleanName = cleanESLintName(props.extends);
+      eslintConfig.extends = `${isPluginConfig ? 'plugin:' : ''}${cleanName}`;
 
       if (!isBuiltInConfig(props.extends)) {
-        install.push(packageName(props.extends, {type: 'config'}));
+        install.push(packageName(cleanName, {
+          type: isPluginConfig ? 'plugin' : 'config',
+        }));
       }
     }
 
@@ -276,8 +280,12 @@ function commaSeparated(list) {
   return list.split(/\s*,\s*/g);
 }
 
+function extendsIsPlugin(extendsName) {
+  return /^(plugin:|eslint\-plugin)/.test(extendsName);
+}
+
 function cleanESLintName(name) {
-  return name.replace(/^(eslint\-)?(config|plugin)\-/, '');
+  return name.replace(/^(plugin\:)?(eslint\-)?((config|plugin)\-)?/, '');
 }
 
 function packageName(name, {type}) {
