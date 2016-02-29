@@ -3,7 +3,6 @@ import {Base as BaseGenerator} from 'yeoman-generator';
 import chalk from 'chalk';
 import yosay from 'yosay';
 
-import {globals as testGlobals, rules as testRules} from './test-overrides';
 import ownPackage from '../../package.json';
 
 const defaultIgnores = ['node_modules/', 'coverage/'];
@@ -36,18 +35,6 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       desc: 'Whether to use the Babel linter and ES6 env.',
     });
 
-    this.option('testDir', {
-      type: String,
-      required: false,
-      desc: 'The (relative) directory in which you place your tests.',
-    });
-
-    this.option('testFramework', {
-      type: String,
-      required: false,
-      desc: 'The testing framework you use (mocha, jasmine, or jest).',
-    });
-
     this.option('ignore', {
       type: Array,
       required: false,
@@ -58,6 +45,12 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       type: Array,
       required: false,
       desc: 'Any rules you would like to forcibly disable.',
+    });
+
+    this.option('configType', {
+      type: String,
+      required: false,
+      desc: 'Sets the type of configuration file you would like (dotfile, package, or javascript).',
     });
   }
 
@@ -70,10 +63,9 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       plugins: options.plugins ? commaSeparated(String(options.plugins)) : [],
       babel: options.babel,
       needsTests: options.testFramework != null || options.testDir != null,
-      testFramework: options.testFramework,
-      testDir: options.testDir,
       ignore: options.ignore,
       disableRules: options.disableRules,
+      configType: options.configType,
     };
   }
 
@@ -144,22 +136,21 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       },
 
       {
-        name: 'testFramework',
-        message: 'What testing framework do you use?',
-        type: 'list',
-        choices: ['Mocha', 'Jasmine', 'Jest'],
-        default: 'Mocha',
-        when({needsTests}) {
-          return options.testFramework == null && (needsTests || options.testDir != null);
-        },
+        name: 'usePackage',
+        message: 'Do you want to put your configuration in package.json?',
+        type: 'confirm',
+        default: false,
+        when: options.usePackage == null,
       },
 
       {
-        name: 'testDir',
-        message: 'What directory are your tests in?',
-        default: 'test',
-        when({needsTests}) {
-          return options.testDir == null && (needsTests || options.testFramework != null);
+        name: 'configType',
+        message: 'What type of file would you like to create for configuration?',
+        type: 'list',
+        choices: ['dotfile', 'javascript'],
+        default: 'dotfile',
+        when({needsTests, usePackage}) {
+          return !usePackage || needsTests;
         },
       },
     ];
@@ -187,7 +178,6 @@ module.exports = class ESLintGenerator extends BaseGenerator {
 
     let pkg = this.fs.readJSON(this.destinationPath('package.json'), {});
     _.merge(pkg, {scripts: {lint: ownPackage.scripts.lint}});
-    this.fs.writeJSON(this.destinationPath('package.json'), pkg);
 
     let env = {};
     let install = ['eslint'];
@@ -230,7 +220,28 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       });
     }
 
-    this.fs.writeJSON(this.destinationPath('.eslintrc'), arrangeConfig(eslintConfig));
+    eslintConfig = arrangeConfig(eslintConfig);
+
+    switch (props.configType) {
+    case 'dotfile':
+      this.fs.writeJSON(
+        this.destinationPath('.eslintrc'),
+        eslintConfig
+      );
+      break;
+
+    case 'package':
+      pkg.eslintConfig = eslintConfig;
+      break;
+
+    case 'javascript':
+      this.fs.write(
+        this.destinationPath('.eslintrc.js'),
+        `module.exports = ${javascriptObjectPrint(eslintConfig)};`
+      );
+    }
+
+    this.fs.writeJSON(this.destinationPath('package.json'), pkg);
     this.npmInstall(install, {saveDev: true});
 
     props.ignore = defaultIgnores.concat(props.ignore);
@@ -239,19 +250,6 @@ module.exports = class ESLintGenerator extends BaseGenerator {
     }
 
     this.fs.write(this.destinationPath('.eslintignore'), props.ignore.join('\n'));
-
-    if (props.needsTests && props.testDir) {
-      let testEnv = {...env};
-      if (props.testFramework != null) {
-        testEnv[props.testFramework.toLowerCase()] = true;
-      }
-
-      this.fs.writeJSON(this.destinationPath(props.testDir, '.eslintrc'), arrangeConfig({
-        env: testEnv,
-        globals: testGlobals,
-        rules: testRules,
-      }));
-    }
   }
 };
 
@@ -263,6 +261,10 @@ const configOrder = [
   'globals',
   'rules',
 ];
+
+function javascriptObjectPrint(object) {
+  return JSON.stringify(object, null, 2).replace(/"([a-zA-Z0-9_\$]*)":/g, '$1:');
+}
 
 function arrangeConfig(config) {
   let arrangedConfig = {};

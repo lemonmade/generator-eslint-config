@@ -5,7 +5,6 @@ import path from 'path';
 import assert from 'yeoman-assert';
 import helpers from 'yeoman-test';
 
-import {globals as testGlobals, rules as testRules} from '../../../src/app/test-overrides';
 import ownPackage from '../../../package.json';
 
 describe('generator:app', () => {
@@ -47,14 +46,6 @@ describe('generator:app', () => {
       });
     });
 
-    it('uses reasonable defaults for the test eslintrc', () => {
-      assert.jsonFileContent('test/.eslintrc', {
-        env: {es6: true, mocha: true},
-        globals: testGlobals,
-        rules: testRules,
-      });
-    });
-
     it('uses reasonable defaults for the test eslintignore', () => {
       assert.fileContent('.eslintignore', /coverage\//);
       assert.fileContent('.eslintignore', /node_modules\//);
@@ -70,15 +61,13 @@ describe('generator:app', () => {
         'rules',
       ];
 
-      ['.eslintrc', 'test/.eslintrc'].forEach((file) => {
-        let eslintConfig = JSON.parse(fs.readFileSync(file).toString());
-        let lastIndex = -1;
+      let eslintConfig = JSON.parse(fs.readFileSync('.eslintrc').toString());
+      let lastIndex = -1;
 
-        Object.keys(eslintConfig).forEach((key) => {
-          let indexOfKey = configOrder.indexOf(key);
-          expect(indexOfKey).to.be.greaterThan(lastIndex);
-          lastIndex = indexOfKey;
-        });
+      Object.keys(eslintConfig).forEach((key) => {
+        let indexOfKey = configOrder.indexOf(key);
+        expect(indexOfKey).to.be.greaterThan(lastIndex);
+        lastIndex = indexOfKey;
       });
     });
 
@@ -119,12 +108,6 @@ describe('generator:app', () => {
           env: expectedEnv,
         });
       });
-
-      it('sets the correct test env', () => {
-        assert.jsonFileContent('test/.eslintrc', {
-          env: {...expectedEnv, [testFramework]: true},
-        });
-      });
     });
 
     context('when provided by prompts', () => {
@@ -138,12 +121,6 @@ describe('generator:app', () => {
       it('sets the correct env', () => {
         assert.jsonFileContent('.eslintrc', {
           env: expectedEnv,
-        });
-      });
-
-      it('sets the correct test env', () => {
-        assert.jsonFileContent('test/.eslintrc', {
-          env: {...expectedEnv, [testFramework]: true},
         });
       });
     });
@@ -350,10 +327,6 @@ describe('generator:app', () => {
       expect(eslintConfig.env).to.deep.equal({});
       expect(eslintConfig.parser).to.be.undefined;
     });
-
-    it('uses reasonable defaults for the test eslintrc', () => {
-      assert.jsonFileContent('test/.eslintrc', {env: {mocha: true}});
-    });
   });
 
   describe('--ignore', () => {
@@ -393,84 +366,46 @@ describe('generator:app', () => {
     });
   });
 
-  describe('--needsTests', () => {
-    beforeEach((done) => {
-      helpers
-        .run(generatorIndex)
-        .withPrompts({needsTests: false})
-        .on('end', done);
-    });
-
-    it('does not write any test eslintrc file', () => {
-      assert.noFile('test/.eslintrc');
-    });
-
-    it('adds the common default test directories to the eslintignore', () => {
-      assert.fileContent('.eslintignore', 'test/');
-      assert.fileContent('.eslintignore', 'spec/');
-    });
-  });
-
-  describe('--testFramework', () => {
-    const nonDefaultFramework = 'jasmine';
-
-    context('when provided by options', () => {
+  describe('--configType', () => {
+    describe('dotfile', () => {
       beforeEach((done) => {
         helpers
           .run(generatorIndex)
-          .withOptions({testFramework: nonDefaultFramework})
+          .withPrompts({configType: 'dotfile'})
           .on('end', done);
       });
 
-      it('sets the correct test framework env', () => {
-        assert.jsonFileContent('test/.eslintrc', {
-          env: {[nonDefaultFramework]: true},
+      it('creates a .eslintrc with the target contents', () => {
+        assert.jsonFileContent('.eslintrc', {extends: 'eslint:recommended'});
+      });
+    });
+
+    describe('javascript', () => {
+      beforeEach((done) => {
+        helpers
+          .run(generatorIndex)
+          .withPrompts({configType: 'javascript'})
+          .on('end', done);
+      });
+
+      it('creates a .eslintrc.js with the target contents', () => {
+        assert.fileContent('.eslintrc.js', 'module.exports = {');
+        assert.fileContent('.eslintrc.js', 'extends: "eslint:recommended"');
+      });
+    });
+
+    describe('package', () => {
+      beforeEach((done) => {
+        helpers
+          .run(generatorIndex)
+          .withPrompts({configType: 'package'})
+          .on('end', done);
+      });
+
+      it('puts configuration in the package.json', () => {
+        assert.jsonFileContent('package.json', {
+          eslintConfig: {extends: 'eslint:recommended'},
         });
-      });
-    });
-
-    context('when provided by prompt', () => {
-      beforeEach((done) => {
-        helpers
-          .run(generatorIndex)
-          .withPrompts({testFramework: nonDefaultFramework})
-          .on('end', done);
-      });
-
-      it('sets the correct test framework env', () => {
-        assert.jsonFileContent('test/.eslintrc', {
-          env: {[nonDefaultFramework]: true},
-        });
-      });
-    });
-  });
-
-  describe('--testDir', () => {
-    const nonDefaultFolder = 'spec';
-
-    context('when provided by options', () => {
-      beforeEach((done) => {
-        helpers
-          .run(generatorIndex)
-          .withOptions({testDir: nonDefaultFolder})
-          .on('end', done);
-      });
-
-      it('puts the eslint file in the correct directory', () => {
-        assert.file(`${nonDefaultFolder}/.eslintrc`);
-      });
-    });
-
-    context('when provided by prompt', () => {
-      beforeEach((done) => {
-        helpers
-          .run(generatorIndex)
-          .withPrompts({testDir: nonDefaultFolder})
-          .on('end', done);
-      });
-
-      it('puts the eslint file in the correct directory', () => {
-        assert.file(`${nonDefaultFolder}/.eslintrc`);
       });
     });
   });
