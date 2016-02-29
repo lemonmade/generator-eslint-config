@@ -2,7 +2,7 @@
   "name": "generator-eslint-config",
   "main": "generators/app/index.js",
   "jsnext:main": "src/app/index.js",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Yeoman generator to create an ESLint configuration.",
   "scripts": {
     "clean": "rimraf generators coverage",
