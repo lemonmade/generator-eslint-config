@@ -136,22 +136,11 @@ module.exports = class ESLintGenerator extends BaseGenerator {
       },
 
       {
-        name: 'usePackage',
-        message: 'Do you want to put your configuration in package.json?',
-        type: 'confirm',
-        default: false,
-        when: options.usePackage == null,
-      },
-
-      {
         name: 'configType',
         message: 'What type of file would you like to create for configuration?',
         type: 'list',
-        choices: ['dotfile', 'javascript'],
+        choices: ['dotfile', 'package', 'javascript'],
         default: 'dotfile',
-        when({needsTests, usePackage}) {
-          return !usePackage || needsTests;
-        },
       },
     ];
 
