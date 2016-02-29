@@ -141,6 +141,7 @@ module.exports = class ESLintGenerator extends BaseGenerator {
         type: 'list',
         choices: ['dotfile', 'package', 'javascript'],
         default: 'dotfile',
+        when: options.configType == null,
       },
     ];
 
